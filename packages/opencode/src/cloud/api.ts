@@ -81,6 +81,12 @@ const JobTools = Schema.Struct({
   skills: Schema.Array(Schema.String),
 })
 
+const JobPermissions = Schema.Struct({
+  filesystem: Schema.Literals(["workspace_only", "read_only"]),
+  shell: Schema.Literals(["disabled", "restricted", "allow"]),
+  network: Schema.Array(Schema.String),
+})
+
 export const CreateJobRequest = Schema.Struct({
   sessionID: Schema.String,
   prompt: Schema.String,
@@ -89,6 +95,7 @@ export const CreateJobRequest = Schema.Struct({
   runtime: JobRuntime,
   model: optionalOmitUndefined(ModelRef),
   tools: JobTools,
+  permissions: optionalOmitUndefined(JobPermissions),
   integratorID: optionalOmitUndefined(Schema.String),
   externalTenantID: optionalOmitUndefined(Schema.String),
   externalUserID: optionalOmitUndefined(Schema.String),

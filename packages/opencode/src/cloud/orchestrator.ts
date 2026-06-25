@@ -135,7 +135,7 @@ export function planJob(input: {
         return skill(item, path)
       }),
     },
-    permissions: {
+    permissions: input.request.permissions ?? {
       filesystem: "workspace_only",
       shell: "restricted",
       network: ["mcp.internal", "storage.internal"],

@@ -82,6 +82,33 @@ describe("CloudAPI", () => {
     expect(request.integratorID).toBe("integrator_abc")
   })
 
+  test("decodes optional job permissions for non-interactive runtime execution", () => {
+    expect(
+      CloudAPI.decodeCreateJobRequest({
+        sessionID: "session_abc",
+        prompt: "Write files",
+        inputs: [],
+        outputs: ["md"],
+        runtime: { profile: "standard" },
+        tools: {
+          webfetch: { enabled: false, allowDomains: [] },
+          websearch: { enabled: false },
+          mcp: [],
+          skills: [],
+        },
+        permissions: {
+          filesystem: "workspace_only",
+          shell: "allow",
+          network: ["storage.internal"],
+        },
+      }).permissions,
+    ).toEqual({
+      filesystem: "workspace_only",
+      shell: "allow",
+      network: ["storage.internal"],
+    })
+  })
+
   test("decodes job events and artifact download responses", () => {
     expect(
       CloudAPI.decodeJobEvent({

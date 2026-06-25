@@ -111,6 +111,33 @@ describe("CloudOrchestrator", () => {
     })
   })
 
+  test("uses explicit job permissions when provided", () => {
+    const request = CloudAPI.decodeCreateJobRequest({
+      sessionID: "session_abc",
+      prompt: "Write a file",
+      inputs: [],
+      outputs: ["md"],
+      runtime: { profile: "standard" },
+      tools: {
+        webfetch: { enabled: false, allowDomains: [] },
+        websearch: { enabled: false },
+        mcp: [],
+        skills: [],
+      },
+      permissions: {
+        filesystem: "workspace_only",
+        shell: "allow",
+        network: ["storage.internal"],
+      },
+    })
+
+    expect(CloudOrchestrator.planJob({ id: "job_abc", tenant, session, request, tools }).permissions).toEqual({
+      filesystem: "workspace_only",
+      shell: "allow",
+      network: ["storage.internal"],
+    })
+  })
+
   test("rejects models outside the tenant allowlist", () => {
     const request = CloudAPI.decodeCreateJobRequest({
       sessionID: "session_abc",
