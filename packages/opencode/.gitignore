@@ -7,3 +7,14 @@ src/provider/models-snapshot.js
 src/provider/models-snapshot.d.ts
 script/build-*.ts
 temporary-*.md
+.cloud-runtime-k8s
+.cloud-runtime-k8s-local
+.cloud-runtime-k8s-worker
+.cloud-runtime-heavy
+.cloud-runtime-minimal
+.cloud-runtime-opencode
+.cloud-runtime-production-install
+.cloud-runtime-roles
+.cloud-runtime-shared
+.cloud-runtime-shared-production
+.cloud-runtime-standard
