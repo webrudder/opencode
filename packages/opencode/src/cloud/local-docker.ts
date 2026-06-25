@@ -550,10 +550,10 @@ function serviceRuntimeLayer(role: ServiceRole, input?: { production?: boolean }
     ...(input?.production
       ? [
           "COPY --from=source --chown=bun:bun /app/packages/opencode/migration /migration",
-          "RUN printf '%s\\n' '#!/bin/sh' 'exec bun /app/dist/opencode-run.js \"$@\"' > /usr/local/bin/opencode",
+          "RUN printf '%s\\n' '#!/bin/sh' 'exec /usr/local/bin/bun /app/dist/opencode-run.js \"$@\"' > /usr/local/bin/opencode",
         ]
       : [
-          "RUN printf '%s\\n' '#!/bin/sh' 'exec bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
+          "RUN printf '%s\\n' '#!/bin/sh' 'exec /usr/local/bin/bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
         ]),
     "RUN chmod +x /usr/local/bin/opencode",
     "RUN mkdir -p /workspace /tmp/cloud-runtime /runtime/skills && chown -R bun:bun /workspace /tmp/cloud-runtime /runtime/skills",
@@ -665,7 +665,7 @@ function baseDockerfile(input: {
       "COPY --from=deps --chown=bun:bun /app/packages/opencode/node_modules /app/packages/opencode/node_modules",
       ...workspaceDependencyLinkLayer(),
       ...workspaceRuntimeLinkLayer(),
-      "RUN printf '%s\\n' '#!/bin/sh' 'exec bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
+      "RUN printf '%s\\n' '#!/bin/sh' 'exec /usr/local/bin/bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
       "RUN chmod +x /usr/local/bin/opencode",
       "RUN mkdir -p /workspace /tmp/cloud-runtime /runtime/skills && chown -R bun:bun /workspace /tmp/cloud-runtime /runtime/skills",
       "USER 1000:1000",
@@ -686,7 +686,7 @@ function baseDockerfile(input: {
     "WORKDIR /app",
     apkAdd(runtimePackages(input.runtimeCapabilityProfile)),
     "COPY --from=source --chown=bun:bun /app /app",
-    "RUN printf '%s\\n' '#!/bin/sh' 'exec bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
+    "RUN printf '%s\\n' '#!/bin/sh' 'exec /usr/local/bin/bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
     "RUN chmod +x /usr/local/bin/opencode",
     "RUN mkdir -p /workspace /tmp/cloud-runtime /runtime/skills && chown -R bun:bun /workspace /tmp/cloud-runtime /runtime/skills",
     "USER 1000:1000",
@@ -742,7 +742,7 @@ function bundledRuntimeDockerfile(input?: {
     apkAdd(runtimePackages(input?.runtimeCapabilityProfile)),
     "COPY --from=build --chown=bun:bun /app/dist /app/dist",
     "COPY --from=source --chown=bun:bun /app/packages/opencode/migration /migration",
-    "RUN printf '%s\\n' '#!/bin/sh' 'exec bun /app/dist/opencode-run.js \"$@\"' > /usr/local/bin/opencode",
+    "RUN printf '%s\\n' '#!/bin/sh' 'exec /usr/local/bin/bun /app/dist/opencode-run.js \"$@\"' > /usr/local/bin/opencode",
     "RUN chmod +x /usr/local/bin/opencode",
     "RUN mkdir -p /workspace /tmp/cloud-runtime /runtime/skills && chown -R bun:bun /workspace /tmp/cloud-runtime /runtime/skills",
     "USER 1000:1000",

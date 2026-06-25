@@ -978,7 +978,7 @@ describe("CloudLocalDocker", () => {
     expect(result["Dockerfile.cloud-opencode-runtime"]).toContain("WORKDIR /workspace")
     expect(result["Dockerfile.cloud-opencode-runtime"]).toContain("apk add --no-cache git ripgrep python3")
     expect(result["Dockerfile.cloud-opencode-runtime"]).toContain("RUN bun build ./src/cloud/opencode-run.ts --target=bun --conditions=browser --outdir=/app/dist")
-    expect(result["Dockerfile.cloud-opencode-runtime"]).toContain("exec bun /app/dist/opencode-run.js")
+    expect(result["Dockerfile.cloud-opencode-runtime"]).toContain("exec /usr/local/bin/bun /app/dist/opencode-run.js")
     expect(result["Dockerfile.cloud-opencode-runtime"]).not.toContain("ln -sfn ../../packages/core /app/node_modules/@opencode-ai/core")
   })
 
