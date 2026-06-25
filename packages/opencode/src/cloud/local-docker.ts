@@ -540,8 +540,24 @@ function bunProductionInstall() {
 }
 
 function servicePackages(role: ServiceRole) {
-  if (role === "worker") return ""
+  if (role === "worker") return runtimePackages("standard")
   return ""
+}
+
+function serviceRuntimeLayer(role: ServiceRole, input?: { production?: boolean }) {
+  if (role !== "worker") return ["RUN mkdir -p /tmp/cloud-runtime && chown -R bun:bun /tmp/cloud-runtime"]
+  return [
+    ...(input?.production
+      ? [
+          "COPY --from=source --chown=bun:bun /app/packages/opencode/migration /migration",
+          "RUN printf '%s\\n' '#!/bin/sh' 'exec bun /app/dist/opencode-run.js \"$@\"' > /usr/local/bin/opencode",
+        ]
+      : [
+          "RUN printf '%s\\n' '#!/bin/sh' 'exec bun run --conditions=browser /app/packages/opencode/src/index.ts \"$@\"' > /usr/local/bin/opencode",
+        ]),
+    "RUN chmod +x /usr/local/bin/opencode",
+    "RUN mkdir -p /workspace /tmp/cloud-runtime /runtime/skills && chown -R bun:bun /workspace /tmp/cloud-runtime /runtime/skills",
+  ]
 }
 
 function serviceDockerfile(role: ServiceRole, command: string, input?: { imageProfile?: ImageProfile }) {
@@ -560,7 +576,7 @@ function serviceDockerfile(role: ServiceRole, command: string, input?: { imagePr
     "WORKDIR /app",
     ...packageLayer,
     "COPY --from=source --chown=bun:bun /app /app",
-    "RUN mkdir -p /tmp/cloud-runtime && chown -R bun:bun /tmp/cloud-runtime",
+    ...serviceRuntimeLayer(role),
     "USER 1000:1000",
     "WORKDIR /app/packages/opencode",
     command,
@@ -576,6 +592,7 @@ function serviceBundleEntrypoints(role: ServiceRole) {
     "RUN bun build ./packages/opencode/src/cloud/local-worker.ts --target=bun --outfile=/app/dist/local-worker.js",
     "RUN bun build ./packages/opencode/src/cloud/postgres-worker.ts --target=bun --outfile=/app/dist/postgres-worker.js",
     "RUN bun build ./packages/opencode/src/cloud/runtime-worker-server.ts --target=bun --outfile=/app/dist/runtime-worker-server.js",
+    "RUN bun build ./packages/opencode/src/cloud/opencode-run.ts --target=bun --conditions=browser --outdir=/app/dist",
   ]
 }
 
@@ -606,8 +623,9 @@ function bundledServiceDockerfile(role: ServiceRole, command: string) {
     "",
     "ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH=0",
     "WORKDIR /app",
+    ...((role === "worker") ? [apkAdd(runtimePackages("standard"))] : []),
     "COPY --from=build --chown=bun:bun /app/dist /app/dist",
-    "RUN mkdir -p /tmp/cloud-runtime && chown -R bun:bun /tmp/cloud-runtime",
+    ...serviceRuntimeLayer(role, { production: true }),
     "USER 1000:1000",
     command,
     "",
@@ -1208,11 +1226,11 @@ export function smokePlan(input: { files: ReturnType<typeof files>; commands: Re
     check({
       name: "worker-role-pruning",
       passed: !input.files["Dockerfile.cloud-worker"].includes('ENTRYPOINT ["opencode"]') &&
-        !input.files["Dockerfile.cloud-worker"].includes("/usr/local/bin/opencode") &&
+        input.files["Dockerfile.cloud-worker"].includes("/usr/local/bin/opencode") &&
         !input.files["Dockerfile.cloud-worker"].includes("chromium") &&
         !input.files["Dockerfile.cloud-worker"].includes("libreoffice") &&
         !input.files["Dockerfile.cloud-worker"].includes("tesseract-ocr"),
-      detail: "Worker image excludes opencode wrapper and heavy runtime packages",
+      detail: "Worker image can execute opencode for shared-session runtime workers without heavy runtime packages",
     }),
     check({
       name: "runtime-role-tools",
