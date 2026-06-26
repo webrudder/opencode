@@ -46,6 +46,16 @@ function launch(input: unknown) {
   return input as CloudWorker.LaunchPlan
 }
 
+function launchWithRuntimeEnv(input: CloudWorker.LaunchPlan) {
+  return {
+    ...input,
+    env: {
+      ...input.env,
+      OPENCODE_RUNTIME_ARTIFACT_MANIFEST: input.env.OPENCODE_RUNTIME_ARTIFACT_MANIFEST ?? input.artifactManifest,
+    },
+  }
+}
+
 function message(input: unknown) {
   if (input instanceof Error) return input.message
   return String(input)
@@ -193,7 +203,7 @@ export function create(input: {
           busySessions: 1,
         },
       }))
-      const requestedLaunch = launch(body.launch)
+      const requestedLaunch = launchWithRuntimeEnv(launch(body.launch))
       const result = await execute({
         runtimeID,
         jobID: `${body.jobID ?? ""}`,

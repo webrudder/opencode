@@ -257,10 +257,12 @@ describe("CloudRuntimeWorkerServer", () => {
 
   test("executes shared-session runtime jobs through the local executor boundary", async () => {
     const jobs: string[] = []
+    const manifests: string[] = []
     const server = CloudRuntimeWorkerServer.create({
       runtimeID: "runtime_abc",
       execute: async (input) => {
         jobs.push(`${input.runtimeID}:${input.jobID}:${input.launch.command}`)
+        manifests.push(input.launch.env.OPENCODE_RUNTIME_ARTIFACT_MANIFEST)
         return {
           status: "succeeded",
           manifest: { version: 1, jobID: input.jobID, artifacts: [] },
@@ -286,6 +288,7 @@ describe("CloudRuntimeWorkerServer", () => {
       sizeByPath: {},
     })
     expect(jobs).toEqual(["runtime_abc:job_abc:opencode"])
+    expect(manifests).toEqual([launch.artifactManifest])
   })
 
   test("heartbeats busy and idle metrics around runtime job execution", async () => {
